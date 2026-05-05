@@ -4,16 +4,18 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Cimentaciones", layout="wide")
 
+# 🔹 ESTILO GENERAL (ancho)
 st.markdown("""
 <style>
 .main .block-container {
-    max-width: 1000px;   /* 🔥 ancho fijo */
-    margin: auto;        /* 🔥 centrado */
+    max-width: 1000px;
+    margin: auto;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🧱 Análisis de Capacidad Portanteee")
+
+st.title("🏗️ 𝐀𝐍Á𝐋𝐈𝐒𝐈𝐒 𝐃𝐄 𝐂𝐀𝐏𝐀𝐂𝐈𝐃𝐀𝐃 𝐏𝐎𝐑𝐓𝐀𝐍𝐓𝐄 𝐃𝐄 𝐂𝐈𝐌𝐄𝐍𝐓𝐀𝐂𝐈𝐎𝐍𝐄𝐒​​​​​​​​​​")
 
 
 with st.sidebar:
@@ -93,7 +95,7 @@ with st.sidebar:
     # =========================
     # 🔹 NIVEL FREÁTICO
     # =========================
-    st.subheader("🔷 NIVEL FREÁTICO")
+    st.subheader("💧 NIVEL FREÁTICO")
     nf = st.radio(
     "nf",
     ["NO", "SI"],
@@ -111,7 +113,7 @@ with st.sidebar:
     # =========================
     # 🔹 FS
     # =========================
-    st.subheader("🔷 FACTOR DE SEGURIDAD")
+    st.subheader("🛡️ FACTOR DE SEGURIDAD")
     FS = st.number_input("FS", value=3.0, label_visibility="collapsed")
     
     # =========================
@@ -174,11 +176,43 @@ def graficar_perfil(df, nf, prof_nf):
 
         z_top = z_bottom
 
-    # 🔹 Nivel freático
+   # 🔹 Nivel freático
     if nf == "SI":
-        ax.axhline(y=prof_nf, linestyle='--')
-        ax.text(1.05, prof_nf, "NF", va='center')
 
+    # 🔵 Línea NF
+     ax.axhline(
+        y=prof_nf,
+        linestyle='--',
+        color='blue',
+        linewidth=1
+    )
+
+    # 🔵 Texto "NF"
+     ax.text(
+    1.10, prof_nf, "NF",   # 🔥 más a la derecha
+    va='center',
+    ha='left',
+    fontsize=8,
+    color='blue'
+)
+
+    # 🔹 COTA DERECHA
+    x_cota = 1.05
+
+    ax.plot([x_cota, x_cota], [0, prof_nf],
+            color='blue', linewidth=1)
+
+    ax.plot([x_cota-0.03, x_cota+0.03], [0, 0], color='blue')
+    ax.plot([x_cota-0.03, x_cota+0.03], [prof_nf, prof_nf], color='blue')
+
+    ax.text(
+        x_cota + 0.05, prof_nf/2,
+        f"{prof_nf:.2f} m",
+        va='center',
+        ha='left',
+        fontsize=6.5,
+        color='blue'
+    )
     # Formato
     ax.set_xlim(-0.4, 1.2)
     ax.set_ylim(z_top, 0)  # invertir eje
@@ -219,14 +253,14 @@ def graficar_tabla(df):
 # =========================
 # 🔹 PERFIL ESTAIGRAFICO TABLA
 # =========================
-st.subheader("🧱 Perfil estratigráfico")
+st.subheader("🧱 ＰＥＲＦＩＬ　ＥＳＴＡＴＩＧＲÁＦＩＣＯ")
 
 st.markdown("""
 <style>
 .card {
     background-color: #eef2f7;
     padding: 29px;
-    height: 100px;
+    height: 22x;
     width: 97px;          /* 🔥 CLAVE: ancho fijo */
     border-radius: 20px;
     border-left: 5px solid #2b6cb0;
@@ -264,14 +298,14 @@ df = st.session_state.df.copy()
 df = df.sort_values("Estrato").reset_index(drop=True)
 
 # 🔥 CREAR COLUMNAS
-c1, c2 = st.columns([4,5])
+c1, c2 = st.columns([3,3])
 
 # =========================
 # 🔹 TABLA (IZQUIERDA)
 # =========================
 with c1:
 
-    st.markdown("### 📋 Perfil del suelo")
+    st.markdown("### 🟣 𝐓𝐚𝐛𝐥𝐚: 𝐝𝐚𝐭𝐨𝐬 𝐝𝐞 𝐩𝐞𝐫𝐟𝐢𝐥")
 
     st.markdown("<div style='max-width:700px;'>", unsafe_allow_html=True)
 
@@ -309,7 +343,7 @@ with c1:
 # =========================
 with c2:
 
-    st.markdown("### 🖼️ Perfil")
+    st.markdown("### 🟩🟥🟧🟨 🅶🆁🅰🅵🅸🅲🅾")
 
     df["Espesor acum. (m)"] = df["Espesor (m)"].cumsum()
 
@@ -447,22 +481,26 @@ def terzaghi_cuadrada(df, h, Df, B, FS, nf, prof_nf, gamma_w):
         gamma_eff = gamma_nat
 
     d = prof_nf - z_base
-
-    if nf == "SI" and prof_nf <= z_base:
-        q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
-        gamma = gamma_eff
-        caso = "Caso 1"
-
-    elif nf == "SI" and 0 < d <= B:
-        q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
-        gamma = gamma_eff + (d / B) * (gamma_nat - gamma_eff)
-        caso = "Caso 2"
-
+    
+    q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
+    
+    if nf == "SI":
+        
+        if d <= 0:
+            gamma = gamma_eff
+            caso = "Caso 1"
+            
+        elif 0 < d <= B:
+            gamma = gamma_eff + (d / B) * (gamma_nat - gamma_eff)
+            caso = "Caso 2"
+        
+        elif d > B:
+            gamma = gamma_nat
+            caso = "Caso 3"
     else:
-        q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
         gamma = gamma_nat
-        caso = "Caso 3"
-
+        caso = "Sin NF"
+    
     Nc, Nq, Ngamma = obtener_factores_terzaghi(phi)
 
     # 🔥 TÉRMINOS SEPARADOS
@@ -521,24 +559,28 @@ def capacidad_general(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta):
         gamma_eff = gamma_nat
 
     d = prof_nf - z_base
+    
+    q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
 
     # =========================
     # CASOS NIVEL FREÁTICO
     # =========================
-    if nf == "SI" and prof_nf <= z_base:
-        q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
-        gamma = gamma_eff
-        caso = "Caso 1"
-
-    elif nf == "SI" and 0 < d <= B:
-        q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
-        gamma = gamma_eff + (d / B) * (gamma_nat - gamma_eff)
-        caso = "Caso 2"
-
+    if nf == "SI":
+        
+        if d <= 0:
+            gamma = gamma_eff
+            caso = "Caso 1"
+            
+        elif 0 < d <= B:
+            gamma = gamma_eff + (d / B) * (gamma_nat - gamma_eff)
+            caso = "Caso 2"
+        
+        elif d > B:
+            gamma = gamma_nat
+            caso = "Caso 3"
     else:
-        q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
         gamma = gamma_nat
-        caso = "Caso 3"
+        caso = "Sin NF"
 
     # =========================
     # FACTORES DE CAPACIDAD
@@ -647,70 +689,76 @@ def capacidad_general(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta):
 # =========================
 
 tab1, tab2, tab3 = st.tabs([
-    "📐 Teoría", "📊 Resultados", "📈 Gráficos"
+    "🧠 ＴＥＯＲÍＡ", "📝 ＲＥＳＵＬＴＡＤＯＳ", "📈ＧＲÁＦＩＣＯＳ"
 ])
 
 if calcular:
-    
- resultados = []
 
- B_actual = B_ini
- while B_actual <= B_fin + 1e-6:
+    resultados = []
 
-     Df_actual = Df_ini
-     while Df_actual <= Df_fin + 1e-6:
+    B_actual = B_ini
+    while B_actual <= B_fin + 1e-6:
 
-         L = k * B_actual
+        Df_actual = Df_ini
+        while Df_actual <= Df_fin + 1e-6:
 
-         if metodo == "Terzaghi":
-             res = terzaghi_cuadrada(df, h, Df_actual, B_actual, FS, nf, prof_nf, gamma_w)
-         else:
-             res = capacidad_general(df, h, Df_actual, B_actual, L, FS, nf, prof_nf, gamma_w, beta)
+            L = k * B_actual
 
-         A = B_actual * L
-         Q = res["qadm"] * A
-         
-         resultados.append({
-             "B (m)": B_actual,
-             "Df (m)": Df_actual,
-             "L (m)": L,
-             "Área (m²)": A,
-             "φ (°)": res["phi"],
-             "c (t/m²)": res["c"],
-             "γ (t/m³)": res["gamma"],
-             "q": res["q"],
-             "q_ult": res["qult"],
-             "q_adm": res["qadm"],
-             "Q (t)": Q,
-             "Caso": res["caso"],
-         })
-         Df_actual += dDf
+            if metodo == "Terzaghi":
+                res = terzaghi_cuadrada(df, h, Df_actual, B_actual, FS, nf, prof_nf, gamma_w)
+            else:
+                res = capacidad_general(df, h, Df_actual, B_actual, L, FS, nf, prof_nf, gamma_w, beta)
 
-     B_actual += dB
+            A = B_actual * L
+            Q = res["qadm"] * A
+            
+            resultados.append({
+    "B (m)": B_actual,
+    "Df (m)": Df_actual,
+    "L (m)": L,
+    "Área (m²)": A,
+    "φ (°)": res["phi"],
+    "c (t/m²)": res["c"],
+    "γ (t/m³)": res["gamma"],
+    "q": res["q"],
 
- # guardar tabla
- st.session_state.df_res = pd.DataFrame(resultados)
+    # 🔥 NUEVO
+    "Term1": res["term1"],
+    "Term2": res["term2"],
+    "Term3": res["term3"],
 
- # 🔥 GUARDAR CASO BASE (valores iniciales)
- B0 = B_ini
- Df0 = Df_ini
- L0 = k * B0
+    "q_ult": res["qult"],
+    "q_adm": res["qadm"],
+    "Q (t)": Q,
+    "Caso": res["caso"],
+})
 
- if metodo == "Terzaghi":
-     res0 = terzaghi_cuadrada(df, h, Df0, B0, FS, nf, prof_nf, gamma_w)
- else:
-     res0 = capacidad_general(df, h, Df0, B0, L0, FS, nf, prof_nf, gamma_w, beta)
+            Df_actual += dDf
 
- st.session_state.teoria = {
-     "B": B0,
-     "Df": Df0,
-     "L": L0,
-     "res": res0,
-     "formula": metodo
- }
+        B_actual += dB
 
- st.success("✅ Cálculo realizado.")
+    # ✅ guardar tabla
+    st.session_state.df_res = pd.DataFrame(resultados)
 
+    # ✅ CASO BASE (CORREGIDO)
+    B0 = B_ini
+    Df0 = Df_ini
+    L0 = k * B0
+
+    if metodo == "Terzaghi":
+        res0 = terzaghi_cuadrada(df, h, Df0, B0, FS, nf, prof_nf, gamma_w)
+    else:
+        res0 = capacidad_general(df, h, Df0, B0, L0, FS, nf, prof_nf, gamma_w, beta)
+
+    st.session_state.teoria = {
+        "B": B0,
+        "Df": Df0,
+        "L": L0,
+        "res": res0,
+        "formula": metodo
+    }
+
+    st.success("✅ Cálculo realizado.")
 
 # 🔥 RESETEAR TEORÍA SI CAMBIAN INPUTS
 if "teoria_inputs" not in st.session_state:
@@ -729,89 +777,148 @@ if st.session_state.teoria_inputs != current_inputs:
     st.session_state.teoria = None
     st.session_state.teoria_inputs = current_inputs
     
-    
-    
+# =========================
+# 📐 TAB 1: ESTILOOOOO
+# =========================
+st.markdown("""
+<style>
+.box {
+    background-color: #f7fafc;
+    padding: 15px;
+    border-radius: 12px;
+    border-left: 5px solid #2b6cb0;
+    margin-bottom: 10px;
+}
+.box-title {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #2d3748;
+}
+.box-text {
+    font-size: 12px;
+    color: #1a202c;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # =========================
 # 📐 TAB 1: TEORÍA PRO (COMPACTA)
 # =========================
 with tab1:
 
-    st.header("📐 Teoría & Ecuaciones")
+    st.header("𝐅𝐮𝐧𝐝𝐚𝐦𝐞𝐧𝐭𝐨𝐬 𝐝𝐞 𝐜𝐚𝐩𝐚𝐜𝐢𝐝𝐚𝐝 𝐩𝐨𝐫𝐭𝐚𝐧𝐭𝐞")
 
     # =========================
     # 🔹 MÉTODOS
     # =========================
-    col1, col2 = st.columns(2)
+    c1, c2 = st.columns(2)
 
-    with col1:
-        st.markdown("**Terzaghi (1943)**")
+    with c1:
+        st.markdown("""
+        <div class="box">
+        <div class="box-title">Terzaghi (1943)</div>
+        <div class="box-text">
+        Zapatas superficiales.<br>
+        No incluye correcciones avanzadas.
+        </div>
+        </div>
+        """, unsafe_allow_html=True)
+
         st.latex(r"q_{ult} = 1.3cN_c + qN_q + 0.4\gamma BN_\gamma")
 
-        st.caption("c: cohesión · q: sobrecarga · γ: peso unitario · B: ancho")
+    with c2:
+        st.markdown("""
+        <div class="box">
+        <div class="box-title">Método General</div>
+        <div class="box-text">
+        Incluye forma, profundidad e inclinación.
+        </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    with col2:
-        st.markdown("**Método General**")
         st.latex(r"q_{ult} = cN_cF_c + qN_qF_q + 0.5\gamma BN_\gamma F_\gamma")
 
-        st.caption("Incluye factores de forma, profundidad e inclinación")
-
     st.divider()
 
     # =========================
-    # 🔹 FACTORES Nc, Nq, Nγ
+    # 🔹 FACTORES + CORRECCIONES
     # =========================
-    col1, col2 = st.columns([1, 1.2])
+    c1, c2 = st.columns(2)
 
-    with col1:
-        st.markdown("**Factores de capacidad portante**")
-        st.caption("Dependen del ángulo de fricción φ")
+    # 🔹 FACTORES (IZQUIERDA)
+    with c1:
+        st.markdown("""
+        <div class="box">
+        <div class="box-title">Factores de capacidad</div>
+        <div class="box-text">
+        Dependen del ángulo de fricción φ.
+        </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    with col2:
-        st.latex(r"N_q = e^{\pi \tan\phi} \tan^2\left(45^\circ + \frac{\phi}{2}\right)")
-        st.latex(r"N_c = \frac{N_q - 1}{\tan\phi}")
-        st.latex(r"N_\gamma = 2(N_q + 1)\tan\phi")
+        st.latex(r"""
+        \begin{aligned}
+        N_q &= e^{\pi \tan\phi} \tan^2\left(45^\circ + \frac{\phi}{2}\right) \\
+        N_c &= \frac{N_q - 1}{\tan\phi} \\
+        N_\gamma &= 2(N_q + 1)\tan\phi
+        \end{aligned}
+        """)
 
-    st.divider()
+    # 🔹 CORRECCIONES (DERECHA)
+    with c2:
 
-    # =========================
-    # 🔹 CORRECCIONES (ULTRA LIMPIO)
-    # =========================
-    col1, col2, col3 = st.columns(3)
+        st.markdown("""
+        <div class="box">
+        <div class="box-title">Forma</div>
+        <div class="box-text">Depende de B/L</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    col1.markdown("**Forma**  \nB/L")
-    col2.markdown("**Profundidad**  \nDf/B")
-    col3.markdown("**Inclinación**  \nβ")
+        st.markdown("""
+        <div class="box">
+        <div class="box-title">Profundidad</div>
+        <div class="box-text">Relación Df/B</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="box">
+        <div class="box-title">Inclinación</div>
+        <div class="box-text">Ángulo β</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.divider()
 
     # =========================
     # 🔹 NIVEL FREÁTICO
     # =========================
-    col1, col2 = st.columns([1,1])
-
-    with col1:
-        st.markdown("**Nivel freático**")
-        st.caption("Afecta el peso efectivo del suelo")
-
-    with col2:
-        st.markdown("""
-        • Sobre base → γ efectivo  
-        • Dentro de B → interpolación  
-        • Profundo → γ natural  
-        """)
-
+    st.markdown("""
+    <div class="box">
+    <div class="box-title">Nivel freático</div>
+    <div class="box-text">
+    • Sobre base → γ' <br>
+    • Dentro de B → interpolación <br>
+    • Profundo → γ natural
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
 # =========================
 # TAB 2: RESULTADOS
 # =========================
 with tab2:
 
-    st.subheader("📊 Resultados")
+    st.subheader("📊 𝐑𝐞𝐬𝐮𝐥𝐭𝐚𝐝𝐨𝐬")
 
-    if "teoria" in st.session_state and st.session_state.teoria is not None:
-
+    if "df_res" not in st.session_state or st.session_state.teoria is None:
+        st.info("⬅️ Presiona 'Calcular capacidad portante'")
+    
+    else:
         teo = st.session_state.teoria
         res = teo["res"]
-
+        
         es_cuadrada = abs(teo["L"] - teo["B"]) < 1e-6
 
         # =========================
@@ -824,108 +931,88 @@ with tab2:
             metodo_txt = "Método General"
             formula_txt = r"q_{ult} = cN_cF_c + qN_qF_q + 0.5\gamma BN_\gamma F_\gamma"
 
-            if not es_cuadrada:
-                st.warning("⚠️ Geometría rectangular → se aplica método general")
-
         st.markdown(f"## 📐 {metodo_txt}")
         st.latex(formula_txt)
-
-        st.divider()
-
+        
         # =========================
-        # 🔹 DATOS
+        # 🔹 DATOS (COMPACTO Y ORDENADO)
         # =========================
         st.markdown("### 🔹 Datos de entrada")
-
+        
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("B (m)", f"{teo['B']:.2f}")
         c2.metric("Df (m)", f"{teo['Df']:.2f}")
         c3.metric("L (m)", f"{teo['L']:.2f}")
         c4.metric("φ (°)", f"{res['phi']:.0f}")
-
+        
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("c (t/m²)", f"{res['c']:.2f}")
         c2.metric("γ (t/m³)", f"{res['gamma']:.2f}")
         c3.metric("q (t/m²)", f"{res['q']:.2f}")
-        c4.metric("Caso", f"{res['caso']}")
-
-        st.divider()
-
+        c4.metric("Caso", res['caso'])
+        
         # =========================
         # 🔹 FACTORES
         # =========================
+        
         st.markdown("### 🔹 Factores de capacidad")
-
+        
         f1, f2, f3 = st.columns(3)
         f1.metric("Nc", f"{res['Nc']:.2f}")
         f2.metric("Nq", f"{res['Nq']:.2f}")
         f3.metric("Nγ", f"{res['Ngamma']:.2f}")
-
+        
         # =========================
-        # 🔹 GENERAL → FACTORES EXTRA
+        # 🔹 FACTORES GENERAL (SI APLICA)
         # =========================
         if metodo_txt == "Método General":
-            
-            st.info(f"Df/B = {res['Df_B']:.2f} → {res['phi_cond']}")
-
-            st.markdown("### 🔹 Factores de corrección")
-
-            f1, f2, f3 = st.columns(3)
-            f1.metric("Fcs", f"{res['Fcs']:.2f}")
-            f2.metric("Fcd", f"{res['Fcd']:.2f}")
-            f3.metric("Fci", f"{res['Fci']:.2f}")
-
-            f1, f2, f3 = st.columns(3)
-            f1.metric("Fqs", f"{res['Fqs']:.2f}")
-            f2.metric("Fqd", f"{res['Fqd']:.2f}")
-            f3.metric("Fqi", f"{res['Fqi']:.2f}")
-
-            f1, f2, f3 = st.columns(3)
-            f1.metric("Fgs", f"{res['Fgs']:.2f}")
-            f2.metric("Fgd", f"{res['Fgd']:.2f}")
-            f3.metric("Fgi", f"{res['Fgi']:.2f}")
-
-        st.divider()
-
+          st.caption(f"Df/B = {res['Df_B']:.2f}")
+          
+          f1, f2, f3 = st.columns(3)
+          f1.metric("Fcs", f"{res['Fcs']:.2f}")
+          f2.metric("Fcd", f"{res['Fcd']:.2f}")
+          f3.metric("Fci", f"{res['Fci']:.2f}")
+          
+          f1, f2, f3 = st.columns(3)
+          f1.metric("Fqs", f"{res['Fqs']:.2f}")
+          f2.metric("Fqd", f"{res['Fqd']:.2f}")
+          f3.metric("Fqi", f"{res['Fqi']:.2f}")
+          
+          f1, f2, f3 = st.columns(3)
+          f1.metric("Fgs", f"{res['Fgs']:.2f}")
+          f2.metric("Fgd", f"{res['Fgd']:.2f}")
+          f3.metric("Fgi", f"{res['Fgi']:.2f}")
+          
         # =========================
         # 🔹 TÉRMINOS
         # =========================
-        st.markdown("### 🔹 Desglose de términos")
-
+        st.markdown("### 🔹 Términos")
         t1, t2, t3 = st.columns(3)
-
+        
         if metodo_txt == "Método de Terzaghi":
-            t1.metric("1.3·c·Nc", f"{res['term1']:.2f}")
-            t2.metric("q·Nq", f"{res['term2']:.2f}")
-            t3.metric("0.4·γ·B·Nγ", f"{res['term3']:.2f}")
+            t1.metric("1.3·c·Nc (t/m²)", f"{res['term1']:.2f}")
+            t2.metric("q·Nq (t/m²)", f"{res['term2']:.2f}")
+            t3.metric("0.4·γ·B·Nγ (t/m²)", f"{res['term3']:.2f}")
         else:
-            t1.metric("c·Nc·Fc", f"{res['term1']:.2f}")
-            t2.metric("q·Nq·Fq", f"{res['term2']:.2f}")
-            t3.metric("0.5·γ·B·Nγ·Fγ", f"{res['term3']:.2f}")
-
-        st.divider()
-
-        # =========================
-        # 🔹 RESULTADOS
-        # =========================
-        st.markdown("### 🔹 Resultados finales")
-
+            t1.metric("c·Nc·Fc (t/m²)", f"{res['term1']:.2f}")
+            t2.metric("q·Nq·Fq (t/m²)", f"{res['term2']:.2f}")
+            t3.metric("0.5·γ·B·Nγ·Fγ (t/m²)", f"{res['term3']:.2f}")
+            
+      # =========================
+      # 🔹 RESULTADOS
+      # =========================
+        st.markdown("### 🔹 Resultados")
         r1, r2 = st.columns(2)
-
         r1.success(f"q_ult = {res['qult']:.2f} t/m²")
         r2.success(f"q_adm = {res['qadm']:.2f} t/m²")
 
-        st.divider()
-
-    # =========================
-    # 🔹 TABLA
-    # =========================
-    if "df_res" in st.session_state:
+       # =========================
+       # 🔹 TABLA
+       # =========================
         st.markdown("## 📋 Tabla de iteraciones")
         st.dataframe(st.session_state.df_res, use_container_width=True)
-    else:
-        st.info("⬅️ Presiona 'Calcular capacidad portante'")
-
+            
+        
 # =========================
 # 🔹 TAB 3: GRÁFICOS
 # =========================
@@ -939,7 +1026,7 @@ with tab3:
         df_res = st.session_state.df_res.copy()
         df_res["Df (m)"] = df_res["Df (m)"].round(2)
         
-        st.markdown(f"### Capacidad portante ({metodo})")
+        st.markdown(f"### 📈 𝐕𝐚𝐫𝐢𝐚𝐜𝐢ó𝐧 𝐝𝐞 𝐃𝐅 ({metodo})")
 
         tabla = df_res.pivot_table(
             index="B (m)",
@@ -1042,7 +1129,7 @@ with tab3:
 
         # 🔹 detectar método
         metodo = st.session_state.teoria["formula"] if "teoria" in st.session_state and st.session_state.teoria else "General"
-        st.markdown(f"### 🔥 Mapa de calor ({metodo})")
+        st.markdown(f"### 🔥 𝐌𝐚𝐩𝐚 𝐝𝐞 𝐜𝐚𝐥𝐨𝐫 ({metodo})")
 
         # =========================
         # 🔹 TABLA BASE
