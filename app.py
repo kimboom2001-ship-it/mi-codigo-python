@@ -1237,7 +1237,7 @@ if calcular:
                     beta,
                     e1,
                     e2
-          )
+            )
 
 
 
@@ -1505,6 +1505,11 @@ with tab2:
     
     if teo["formula"] == "CRITERIOS":
 
+        # 🔥 AGREGAR ESTO
+        B0 = B_ini
+        Df0 = Df_ini
+        L0 = k * B0
+ 
         # =====================================
         # 🔹 CÁLCULOS BASE
         # =====================================
@@ -1521,69 +1526,91 @@ with tab2:
         r_gen = capacidad_general(
             df, h, Df0, B0, L0,
             FS, nf, prof_nf,
-            gamma_w, beta
+            gamma_w, beta, e1, e2
         )
 
         # RNE MATEMÁTICO
         r_rne = capacidad_rne(
             df, h, Df0, B0, L0,
             FS, nf, prof_nf,
-            gamma_w, beta
+            gamma_w, beta, e1, e2
         )
 
         # =====================================
         # 🔹 TABLA 1 — CRITERIO ACADÉMICO
-        # 🔹 (AZUL)
         # =====================================
 
         datos_academico = []
 
-        # TERZAGHI
+        # =========================
+        # 🔹 TERZAGHI
+        # =========================
         if k == 1:
 
             datos_academico.append({
 
                 "Método": "TERZAGHI",
 
-                "1ER": r_ter["term1"],
-                "2DO": r_ter["term2"],
-                "3ERO": r_ter["term3"],
+                "1ER":   r_ter["term1"],
+                "2DO":   r_ter["term2"],
+                "3ERO":  r_ter["term3"],
 
-                "qu (t/m²)": r_ter["qult"],
-                "qadm (t/m²)": r_ter["qadm"],
-                "Qmáx (t)": r_ter["qadm"] * B0 * L0
+                "qu":    r_ter["qult"],
+                "qadm":  r_ter["qadm"],
+                "Qmáx":  r_ter["qadm"] * B0 * L0
             })
 
-        # EGCC
+        # =========================
+        # 🔹 EGCC
+        # =========================
         datos_academico.append({
 
             "Método": "EGCC",
 
-            "1ER": r_gen["term1"],
-            "2DO": r_gen["term2"],
-            "3ERO": r_gen["term3"],
+            "1ER":   r_gen["term1"],
+            "2DO":   r_gen["term2"],
+            "3ERO":  r_gen["term3"],
 
-            "qu (kN/m²)": r_gen["qult"],
-            "qadm (kN/m²)": r_gen["qadm"],
-            "Qmáx (kN)": r_gen["qadm"] * B0 * L0
+            "qu":    r_gen["qult"],
+            "qadm":  r_gen["qadm"],
+            "Qmáx":  r_gen["qadm"] * B0 * L0
         })
 
-        # RNE
+        # =========================
+        # 🔹 RNE
+        # =========================
         datos_academico.append({
 
             "Método": "RNE",
 
-            "1ER": r_rne["term1"],
-            "2DO": r_rne["term2"],
-            "3ERO": r_rne["term3"],
+            "1ER":   r_rne["term1"],
+            "2DO":   r_rne["term2"],
+            "3ERO":  r_rne["term3"],
 
-            "qu (kN/m²)": r_rne["qult"],
-            "qadm (kN/m²)": r_rne["qadm"],
-            "Qmáx (kN)": r_rne["qadm"] * B0 * L0
+            "qu":    r_rne["qult"],
+            "qadm":  r_rne["qadm"],
+            "Qmáx":  r_rne["qadm"] * B0 * L0
         })
 
+        # =========================
+        # 🔹 DATAFRAME
+        # =========================
         tabla_academico = pd.DataFrame(datos_academico)
 
+        # 🔹 Renombrar columnas visualmente
+        tabla_academico.columns = [
+            "Método",
+            "1ER",
+            "2DO",
+            "3ERO",
+            "qu (kN/m²)",
+            "qadm (kN/m²)",
+            "Qmáx (kN)"
+        ]
+
+        # =========================
+        # 🔹 MOSTRAR TABLA
+        # =========================
         mostrar_tabla_criterio(
             tabla_academico,
             "CRITERIO ACADÉMICO COMPLETO",
