@@ -4,6 +4,30 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Cimentaciones", layout="wide")
 
+
+st.markdown("""
+<style>
+
+/* 🔹 VALORES (números) */
+[data-testid="stMetricValue"] {
+    font-size: 26px !important;
+    font-weight: 600;
+}
+
+/* 🔥 ETIQUETAS (Nc, B, etc.) */
+[data-testid="stMetricLabel"] > div {
+    font-size: 26px !important;
+    font-weight: 600;
+}
+
+/* 🔹 CONTENEDOR */
+div[data-testid="stMetric"] {
+    padding: 4px 6px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # 🔹 ESTILO GENERAL (ancho)
 st.markdown("""
 <style>
@@ -32,11 +56,7 @@ with st.sidebar:
     if sotano == "SI":
         h = st.number_input("h (m)", value=3.0)
 
-    # ========================= 
-    # 🔹 INCLINACIÓN 
-    # =========================
-    beta = st.selectbox("β (°)", [0, 1])
-
+   
     # =========================
     # 🔹 GEOMETRÍA
     # =========================
@@ -51,7 +71,7 @@ with st.sidebar:
     with col2:
         B_fin = st.number_input("B final", value=3.0)
     
-    dB = st.number_input("ΔB", value=0.5)
+    dB = st.number_input("ΔB", value=0.4)
 
 # 🔹 Df
     col3, col4 = st.columns(2)
@@ -61,8 +81,9 @@ with st.sidebar:
     
     with col4:
        Df_fin = st.number_input("Df final", value=3.0)
-    dDf = st.number_input("ΔDf", value=0.5)
-
+    dDf = st.number_input("ΔDf", value=0.4)
+    
+    
     # =========================
     # 🔹 ZAPATA
     # =========================
@@ -87,20 +108,82 @@ with st.sidebar:
     elif "10B" in tipo:
         k = 10
 
+   
+    # =========================
+    # 🔹 MÉTODO / CRITERIO
+    # =========================
+
     if k == 1:
-        metodo = st.selectbox("Método", ["Terzaghi", "General"])
+
+      metodo = st.selectbox(
+        "Método",
+        [
+            "Terzaghi",
+            "General",
+            "RNE",
+            "CRITERIOS"
+        ]
+    )
+
     else:
-        metodo = "General"
+
+      metodo = st.selectbox(
+        "Método",
+        [
+            "General",
+            "RNE",
+            "CRITERIOS"
+        ]
+    ) 
+    # ========================= 
+    # 🔹 INCLINACIÓN 
+    # =========================
+    beta = 0
+
+    if metodo in ["General", "RNE"]:
+      beta = st.selectbox("β (°)", [0, 1])
+
+    # =====================================
+    # 📐 EXCENTRICIDAD
+    # =====================================
+
+    st.sidebar.markdown("### 📐 Excentricidad")
+
+    usar_excentricidad = st.sidebar.checkbox(
+        "Considerar excentricidad",
+        value=False
+    )
+
+    if usar_excentricidad:
+
+        e1 = st.sidebar.number_input(
+            "e₁ (m)",
+            min_value=0.0,
+            value=0.0,
+            step=0.01
+        )
+
+        e2 = st.sidebar.number_input(
+            "e₂ (m)",
+            min_value=0.0,
+            value=0.0,
+            step=0.01
+        )
+
+    else:
+
+        e1 = 0.0
+        e2 = 0.0
 
     # =========================
     # 🔹 NIVEL FREÁTICO
     # =========================
     st.subheader("💧 NIVEL FREÁTICO")
     nf = st.radio(
-    "nf",
-    ["NO", "SI"],
-    horizontal=True,
-    label_visibility="collapsed"
+        "nf",
+       ["NO", "SI"],
+       horizontal=True,
+       label_visibility="collapsed"
 )
 
     gamma_w = 0.0
@@ -179,43 +262,58 @@ def graficar_perfil(df, nf, prof_nf):
    # 🔹 Nivel freático
     if nf == "SI":
 
-    # 🔵 Línea NF
-     ax.axhline(
-        y=prof_nf,
-        linestyle='--',
-        color='blue',
-        linewidth=1
-    )
+        # 🔵 Línea NF
+        ax.axhline(
+            y=prof_nf,
+            linestyle='--',
+            color='blue',
+            linewidth=1
+        )
 
-    # 🔵 Texto "NF"
-     ax.text(
-    1.10, prof_nf, "NF",   # 🔥 más a la derecha
-    va='center',
-    ha='left',
-    fontsize=8,
-    color='blue'
-)
+        # 🔵 Texto "NF"
+        ax.text(
+            1.10, prof_nf, "NF",
+            va='center',
+            ha='left',
+            fontsize=8,
+            color='blue'
+        )
 
-    # 🔹 COTA DERECHA
-    x_cota = 1.05
+        # 🔹 COTA DERECHA
+        x_cota = 1.05
 
-    ax.plot([x_cota, x_cota], [0, prof_nf],
-            color='blue', linewidth=1)
+        ax.plot(
+            [x_cota, x_cota],
+            [0, prof_nf],
+            color='blue',
+            linewidth=1
+        )
 
-    ax.plot([x_cota-0.03, x_cota+0.03], [0, 0], color='blue')
-    ax.plot([x_cota-0.03, x_cota+0.03], [prof_nf, prof_nf], color='blue')
+        ax.plot(
+            [x_cota - 0.03, x_cota + 0.03],
+            [0, 0],
+            color='blue'
+        )
 
-    ax.text(
-        x_cota + 0.05, prof_nf/2,
-        f"{prof_nf:.2f} m",
-        va='center',
-        ha='left',
-        fontsize=6.5,
-        color='blue'
-    )
-    # Formato
+        ax.plot(
+            [x_cota - 0.03, x_cota + 0.03],
+            [prof_nf, prof_nf],
+            color='blue'
+        )
+
+        ax.text(
+            x_cota + 0.05,
+            prof_nf / 2,
+            f"{prof_nf:.2f} m",
+            va='center',
+            ha='left',
+            fontsize=6.5,
+            color='blue'
+        )
+
+    # 🔹 Formato
     ax.set_xlim(-0.4, 1.2)
-    ax.set_ylim(z_top, 0)  # invertir eje
+    ax.set_ylim(z_top, 0)
     ax.axis('off')
 
     return fig
@@ -260,13 +358,17 @@ st.markdown("""
 .card {
     background-color: #eef2f7;
     padding: 29px;
-    height: 22x;
+    height: 22px;
     width: 97px;          /* 🔥 CLAVE: ancho fijo */
     border-radius: 20px;
     border-left: 5px solid #2b6cb0;
     text-align: center;
     font-size: 11px;
-    margin: 2px auto;      /* 🔥 centra dentro de la columna */
+    margin: 2px auto;     /* 🔥 centra dentro de la columna */
+    /* 🔥 CENTRADO REAL */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 .card-title {
     font-weight: bold;
@@ -338,12 +440,13 @@ with c1:
             """, unsafe_allow_html=True)
 
     st.markdown("<div style='width:650px;'>", unsafe_allow_html=True)
-    # =========================
+
+# =========================
 # 🔹 GRÁFICO (DERECHA)
 # =========================
 with c2:
 
-    st.markdown("### 🟩🟥🟧🟨 🅶🆁🅰🅵🅸🅲🅾")
+    st.markdown("### 🟩🟥🟧🟨 𝐆𝐫á𝐟𝐢𝐜𝐨")
 
     df["Espesor acum. (m)"] = df["Espesor (m)"].cumsum()
 
@@ -540,7 +643,7 @@ def terzaghi_cuadrada(df, h, Df, B, FS, nf, prof_nf, gamma_w):
 # 🔹 GENERAL
 # ========================= 
 
-def capacidad_general(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta):
+def capacidad_general(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta, e1=0, e2=0):
 
     import numpy as np
 
@@ -582,6 +685,17 @@ def capacidad_general(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta):
         gamma = gamma_nat
         caso = "Sin NF"
 
+     # =====================================
+     # 📐 DIMENSIONES EFECTIVAS
+     # =====================================
+
+    Bp = B - 2 * e2
+    Lp = L - 2 * e1
+
+    # Para factores de forma
+    B_shape = min(Bp, Lp)
+    L_shape = max(Bp, Lp)
+
     # =========================
     # FACTORES DE CAPACIDAD
     # =========================
@@ -598,14 +712,25 @@ def capacidad_general(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta):
         Nc = (Nq - 1) / tan_phi
         Ngamma = 2 * (Nq + 1) * tan_phi
         
-        
+    # =====================================
+    # 📐 DIMENSIONES EFECTIVAS
+    # =====================================
+    
+    Bp = B - 2 * e2
+    Lp = L - 2 * e1
+    
+    # 🔥 menor dimensión siempre será B
+    B_shape = min(Bp, Lp)
+    L_shape = max(Bp, Lp)
+    
+    
     # =========================
     # 🔹 FORMA (De Beer)
     # =========================
-    Fcs = 1 + (B/L)*(Nq/Nc)
-    Fqs = 1 + (B/L)*np.tan(phi_rad)
-    Fgs = 1 - 0.4*(B/L)
-
+    Fcs = 1 + (B_shape/L_shape)*(Nq/Nc)
+    Fqs = 1 + (B_shape/L_shape)*np.tan(phi_rad)
+    Fgs = 1 - 0.4*(B_shape/L_shape)
+    
     # =========================
     # 🔹 PROFUNDIDAD (Hansen)
     # =========================
@@ -674,7 +799,7 @@ def capacidad_general(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta):
     "Fci": Fci,
     "Fqi": Fqi,
     "Fgi": Fgi,
-
+ 
     # 🔹 TÉRMINOS
     "term1": term1,
     "term2": term2,
@@ -682,22 +807,385 @@ def capacidad_general(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta):
 
     # 🔹 CONTROL (para tu interfaz)
     "Df_B": Df / B,
-    "phi_cond": "φ > 0" if phi > 0 else "φ = 0"
-}
+    "phi_cond": "φ > 0" if phi > 0 else "φ = 0",
+    
+    # 📐 EXCENTRICIDAD
+    "Bp": Bp,
+    "Lp": Lp
+    }
+
+# =========================
+# 🔹 RNE LEGAL
+# =========================
+
+def capacidad_rne_legal(df, h, Df, B, L, FS, nf, prof_nf, gamma_w):
+
+    import numpy as np
+
+    z_base = h + Df
+    row = obtener_propiedades_en_Df(df, z_base)
+
+    phi = row["φ (°)"]
+    c = row["c (t/m²)"]
+    gamma_nat = row["γ (t/m³)"]
+
+    q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
+
+    phi_rad = np.radians(phi)
+
+    if abs(phi) < 1e-6:
+
+        Nc = 5.14
+        Nq = 1
+        Ngamma = 0
+
+    else:
+
+        tan_phi = np.tan(phi_rad)
+
+        Nq = np.exp(np.pi * tan_phi) * (
+            np.tan(np.radians(45) + phi_rad / 2)
+        )**2
+
+        Nc = (Nq - 1) / tan_phi
+
+        # 🔥 RNE LEGAL IDEALIZADO
+        Ngamma = (Nq - 1) * np.tan(1.4 * phi_rad)
+
+    # 🔥 SIN FACTORES
+    term1 = c * Nc
+    term2 = q * Nq
+    term3 = 0.5 * gamma_nat * B * Ngamma
+
+    qult = term1 + term2 + term3
+
+    qadm = qult / FS
+
+    return {
+
+        "term1": term1,
+        "term2": term2,
+        "term3": term3,
+
+        "qult": qult,
+        "qadm": qadm
+    }
+
+# =========================
+# 🔹 RNE
+# =========================
+
+def capacidad_rne(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta, e1=0, e2=0):
+
+    import numpy as np
+
+    z_base = h + Df
+    row = obtener_propiedades_en_Df(df, z_base)
+
+    phi = row["φ (°)"]
+    c = row["c (t/m²)"]
+    gamma_nat = row["γ (t/m³)"]
+    gamma_sat = row["γsat (t/m³)"]
+
+    # =========================
+    # γ efectivo
+    # =========================
+    if pd.notnull(gamma_sat):
+        gamma_eff = gamma_sat - gamma_w
+    else:
+        gamma_eff = gamma_nat
+
+    d = prof_nf - z_base
+
+    q = calcular_q(df, h, z_base, prof_nf, gamma_w, nf)
+
+    # =========================
+    # NIVEL FREÁTICO
+    # =========================
+    if nf == "SI":
+
+        if d <= 0:
+            gamma = gamma_eff
+            caso = "Caso 1"
+
+        elif 0 < d <= B:
+            gamma = gamma_eff + (d / B) * (gamma_nat - gamma_eff)
+            caso = "Caso 2"
+
+        else:
+            gamma = gamma_nat
+            caso = "Caso 3"
+
+    else:
+        gamma = gamma_nat
+        caso = "Sin NF"
+
+    # =========================
+    # FACTORES RNE
+    # =========================
+    
+    # =====================================
+    # 📐 DIMENSIONES EFECTIVAS
+    # =====================================
+
+    Bp = B - 2 * e2
+    Lp = L - 2 * e1
+
+    # 🔥 menor dimensión siempre controla
+    B_shape = min(Bp, Lp)
+    L_shape = max(Bp, Lp)
+    
+    phi_rad = np.radians(phi)
+
+    if abs(phi) < 1e-6:
+
+        Nc = 5.14
+        Nq = 1
+        Ngamma = 0
+
+    else:
+
+        tan_phi = np.tan(phi_rad)
+
+        Nq = np.exp(np.pi * tan_phi) * (
+            np.tan(np.radians(45) + phi_rad / 2)
+        )**2
+
+        Nc = (Nq - 1) / tan_phi
+
+        # 🔥 RNE
+        Ngamma = (Nq - 1) * np.tan(1.4 * phi_rad)
+        
+        
+    # =====================================
+    # 📐 DIMENSIONES EFECTIVAS
+    # =====================================
+
+    Bp = B - 2 * e2
+    Lp = L - 2 * e1
+
+    # 🔥 menor dimensión controla
+    B_shape = min(Bp, Lp)
+    L_shape = max(Bp, Lp)
+
+
+    # =========================
+    # FACTORES DE FORMA (RNE)
+    # =========================
+    sc = 1 + 0.2 * (B_shape / L_shape)
+
+    sg = 1 - 0.4 * (B_shape / L_shape)
+
+    # =========================
+    # FACTORES DE INCLINACIÓN
+    # =========================
+    ic = (1 - beta / 90)**2
+
+    iq = (1 - beta / 90)**2
+
+    if phi > 0:
+        ig = (1 - beta / phi)**2
+    else:
+        ig = 1
+
+    # =========================
+    # TÉRMINOS RNE
+    # =========================
+    term1 = c * Nc * sc * ic
+
+    term2 = q * Nq * iq
+
+    term3 = 0.5 * gamma * B * Ngamma * sg * ig
+
+    # =========================
+    # CAPACIDAD PORTANTE
+    # =========================
+    qult = term1 + term2 + term3
+
+    qadm = qult / FS
+
+    return {
+
+        "phi": phi,
+        "c": c,
+        "gamma": gamma,
+        "q": q,
+
+        "qult": qult,
+        "qadm": qadm,
+
+        "caso": caso,
+
+        # 🔹 FACTORES DE CAPACIDAD
+        "Nc": Nc,
+        "Nq": Nq,
+        "Ngamma": Ngamma,
+
+        # 🔹 FACTORES DE FORMA
+        "Fcs": sc,
+        "Fgs": sg,
+
+        # 🔹 FACTORES DE INCLINACIÓN
+        "Fci": ic,
+        "Fqi": iq,
+        "Fgi": ig,
+
+        # 🔹 TÉRMINOS
+        "term1": term1,
+        "term2": term2,
+        "term3": term3,
+        
+        # 🔹 CONTROL
+        "Df_B": Df / B,
+        
+        # 📐 EXCENTRICIDAD
+        "Bp": Bp,
+        "Lp": Lp,
+    }
+
 # =========================
 # 🔹 CÁLCULO
 # =========================
+def mostrar_tabla_criterio(df, titulo, color):
 
+    st.markdown(
+        f"""
+        <div style="
+            background:{color};
+            color:white;
+            padding:8px;
+            border-radius:6px 6px 0 0;
+            font-weight:700;
+            text-align:center;
+            font-size:16px;
+        ">
+            {titulo}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.table(
+        df.style
+        .format("{:.2f}", subset=df.columns[1:])
+        .set_properties(**{
+            "text-align": "center",
+            "font-size": "13px"
+        })
+        .set_table_styles([
+            {
+                "selector": "th",
+                "props": [
+                    ("background-color", color),
+                    ("color", "white"),
+                    ("text-align", "center"),
+                    ("font-weight", "bold")
+                ]
+            },
+            {
+                "selector": "td",
+                "props": [
+                    ("background-color", "#f8fafc"),
+                    ("text-align", "center"),
+                    ("color", "black")
+                ]
+            }
+        ])
+    )
 tab1, tab2, tab3 = st.tabs([
     "🧠 ＴＥＯＲÍＡ", "📝 ＲＥＳＵＬＴＡＤＯＳ", "📈ＧＲÁＦＩＣＯＳ"
 ])
 
 if calcular:
 
-    resultados = []
+    # =========================================
+    # 🔹 CRITERIOS
+    # =========================================
+    if metodo == "CRITERIOS":
 
-    B_actual = B_ini
-    while B_actual <= B_fin + 1e-6:
+        # 🔹 dimensiones base
+        B0 = B_ini
+        Df0 = Df_ini
+        L0 = k * B0
+
+        # =========================================
+        # 🔹 GENERAL
+        # =========================================
+
+        res_general = capacidad_general(
+            df,
+            h,
+            Df0,
+            B0,
+            L0,
+            FS,
+            nf,
+            prof_nf,
+            gamma_w,
+            beta,
+            e1,
+            e2
+        )
+
+        # =========================================
+        # 🔹 RNE LEGAL
+        # =========================================
+
+        res_rne_legal = capacidad_rne_legal(
+            df,
+            h,
+            Df0,
+            B0,
+            L0,
+            FS,
+            nf,
+            prof_nf,
+            gamma_w
+        )
+
+        # =========================================
+        # 🔹 RNE CORREGIDO
+        # =========================================
+
+        res_rne = capacidad_rne(
+            df,
+            h,
+            Df0,
+            B0,
+            L0,
+            FS,
+            nf,
+            prof_nf,
+            gamma_w,
+            beta,
+            e1,
+            e2
+        )
+
+        # =========================================
+        # 🔹 GUARDAR
+        # =========================================
+
+        st.session_state.res_general = res_general
+        st.session_state.res_rne_legal = res_rne_legal
+        st.session_state.res_rne = res_rne
+
+        st.session_state.teoria = {
+            "formula": "CRITERIOS"
+        }
+        
+        # 🔥 evitar error en TAB2 y TAB3
+        st.session_state.df_res = pd.DataFrame()
+        
+    # =========================================
+    # 🔹 MÉTODOS NORMALES
+    # =========================================
+    else:
+
+     resultados = []
+
+     B_actual = B_ini
+     while B_actual <= B_fin + 1e-6:
 
         Df_actual = Df_ini
         while Df_actual <= Df_fin + 1e-6:
@@ -705,60 +1193,152 @@ if calcular:
             L = k * B_actual
 
             if metodo == "Terzaghi":
-                res = terzaghi_cuadrada(df, h, Df_actual, B_actual, FS, nf, prof_nf, gamma_w)
-            else:
-                res = capacidad_general(df, h, Df_actual, B_actual, L, FS, nf, prof_nf, gamma_w, beta)
 
-            A = B_actual * L
+                res = terzaghi_cuadrada(
+                    df,
+                    h,
+                    Df_actual,
+                    B_actual,
+                    FS,
+                    nf,
+                    prof_nf,
+                    gamma_w
+                )
+
+            elif metodo == "General":
+
+                res = capacidad_general(
+                    df,
+                    h,
+                    Df_actual,
+                    B_actual,
+                    L,
+                    FS,
+                    nf,
+                    prof_nf,
+                    gamma_w,
+                    beta,
+                    e1,
+                    e2
+                )
+
+            elif metodo == "RNE":
+
+                res = capacidad_rne(
+                    df,
+                    h,
+                    Df_actual,
+                    B_actual,
+                    L,
+                    FS,
+                    nf,
+                    prof_nf,
+                    gamma_w,
+                    beta,
+                    e1,
+                    e2
+          )
+
+
+
+            # =====================================
+            # 📐 ÁREA EFECTIVA
+            # =====================================
+
+            if usar_excentricidad:
+
+                Bp = B_actual - 2 * e2
+                Lp = L - 2 * e1
+
+                A = Bp * Lp
+
+            else:
+
+                A = B_actual * L
+
             Q = res["qadm"] * A
             
             resultados.append({
-    "B (m)": B_actual,
-    "Df (m)": Df_actual,
-    "L (m)": L,
-    "Área (m²)": A,
-    "φ (°)": res["phi"],
-    "c (t/m²)": res["c"],
-    "γ (t/m³)": res["gamma"],
-    "q": res["q"],
-
-    # 🔥 NUEVO
-    "Term1": res["term1"],
-    "Term2": res["term2"],
-    "Term3": res["term3"],
-
-    "q_ult": res["qult"],
-    "q_adm": res["qadm"],
-    "Q (t)": Q,
-    "Caso": res["caso"],
-})
+              "B (m)": B_actual,
+              "Df (m)": Df_actual,
+              "L (m)": L,
+              "Área (m²)": A,
+              "φ (°)": res["phi"],
+              "c (t/m²)": res["c"],
+              "γ (t/m³)": res["gamma"],
+              "q": res["q"],
+              
+              # 🔥 NUEVO
+              "Term1": res["term1"],
+              "Term2": res["term2"],
+              "Term3": res["term3"],
+              "q_ult": res["qult"],
+              "q_adm": res["qadm"],
+              "Q (t)": Q,
+              "Caso": res["caso"],
+        })
 
             Df_actual += dDf
 
         B_actual += dB
 
-    # ✅ guardar tabla
-    st.session_state.df_res = pd.DataFrame(resultados)
+     # ✅ guardar tabla
+     st.session_state.df_res = pd.DataFrame(resultados)
 
-    # ✅ CASO BASE (CORREGIDO)
-    B0 = B_ini
-    Df0 = Df_ini
-    L0 = k * B0
+     # ✅ CASO BASE (CORREGIDO)
+     B0 = B_ini
+     Df0 = Df_ini
+     L0 = k * B0
 
-    if metodo == "Terzaghi":
-        res0 = terzaghi_cuadrada(df, h, Df0, B0, FS, nf, prof_nf, gamma_w)
-    else:
-        res0 = capacidad_general(df, h, Df0, B0, L0, FS, nf, prof_nf, gamma_w, beta)
+     if metodo == "Terzaghi":
+        res0 = terzaghi_cuadrada(
+         df,
+         h,
+         Df0,
+         B0,
+         FS,
+         nf,
+         prof_nf,
+         gamma_w
+    )
 
-    st.session_state.teoria = {
+     elif metodo == "General":
+      res0 = capacidad_general(
+        df,
+        h,
+        Df0,
+        B0,
+        L0,
+        FS,
+        nf,
+        prof_nf,
+        gamma_w,
+        beta
+    )
+
+     elif metodo == "RNE":
+      res0 = capacidad_rne(
+        df,
+        h,
+        Df0,
+        B0,
+        L0,
+        FS,
+        nf,
+        prof_nf,
+        gamma_w,
+        beta
+    )
+
+     st.session_state.teoria = {
         "B": B0,
         "Df": Df0,
         "L": L0,
+        "beta": beta,
         "res": res0,
         "formula": metodo
     }
-
-    st.success("✅ Cálculo realizado.")
+     st.success("✅ Cálculo realizado.")
 
 # 🔥 RESETEAR TEORÍA SI CAMBIAN INPUTS
 if "teoria_inputs" not in st.session_state:
@@ -916,7 +1496,324 @@ with tab2:
         st.info("⬅️ Presiona 'Calcular capacidad portante'")
     
     else:
-        teo = st.session_state.teoria
+
+     teo = st.session_state.teoria
+     
+    # =====================================
+    # 🔹 CRITERIOS
+    # =====================================
+    
+    if teo["formula"] == "CRITERIOS":
+
+        # =====================================
+        # 🔹 CÁLCULOS BASE
+        # =====================================
+
+        # TERZAGHI
+        if k == 1:
+
+            r_ter = terzaghi_cuadrada(
+                df, h, Df0, B0,
+                FS, nf, prof_nf, gamma_w
+            )
+
+        # EGCC
+        r_gen = capacidad_general(
+            df, h, Df0, B0, L0,
+            FS, nf, prof_nf,
+            gamma_w, beta
+        )
+
+        # RNE MATEMÁTICO
+        r_rne = capacidad_rne(
+            df, h, Df0, B0, L0,
+            FS, nf, prof_nf,
+            gamma_w, beta
+        )
+
+        # =====================================
+        # 🔹 TABLA 1 — CRITERIO ACADÉMICO
+        # 🔹 (AZUL)
+        # =====================================
+
+        datos_academico = []
+
+        # TERZAGHI
+        if k == 1:
+
+            datos_academico.append({
+
+                "Método": "TERZAGHI",
+
+                "1ER": r_ter["term1"],
+                "2DO": r_ter["term2"],
+                "3ERO": r_ter["term3"],
+
+                "qu (t/m²)": r_ter["qult"],
+                "qadm (t/m²)": r_ter["qadm"],
+                "Qmáx (t)": r_ter["qadm"] * B0 * L0
+            })
+
+        # EGCC
+        datos_academico.append({
+
+            "Método": "EGCC",
+
+            "1ER": r_gen["term1"],
+            "2DO": r_gen["term2"],
+            "3ERO": r_gen["term3"],
+
+            "qu (kN/m²)": r_gen["qult"],
+            "qadm (kN/m²)": r_gen["qadm"],
+            "Qmáx (kN)": r_gen["qadm"] * B0 * L0
+        })
+
+        # RNE
+        datos_academico.append({
+
+            "Método": "RNE",
+
+            "1ER": r_rne["term1"],
+            "2DO": r_rne["term2"],
+            "3ERO": r_rne["term3"],
+
+            "qu (kN/m²)": r_rne["qult"],
+            "qadm (kN/m²)": r_rne["qadm"],
+            "Qmáx (kN)": r_rne["qadm"] * B0 * L0
+        })
+
+        tabla_academico = pd.DataFrame(datos_academico)
+
+        mostrar_tabla_criterio(
+            tabla_academico,
+            "CRITERIO ACADÉMICO COMPLETO",
+            "#2563eb"
+        )
+
+        # =====================================
+        # 🔹 TABLA 2 — RNE IDEALIZADO LEGAL
+        # 🔹 (VERDE)
+        # =====================================
+
+        datos_legal = []
+
+        phi_base = r_rne["phi"]
+        c_base = r_rne["c"]
+
+        # CLASIFICACIÓN
+        if phi_base >= 20:
+
+            tipo_suelo = "SUELO FRICCIONANTE"
+
+        else:
+
+            if c_base >= 1:
+
+                tipo_suelo = "SUELO COHESIVO"
+
+            else:
+
+                tipo_suelo = "SUELO FRICCIONANTE"
+
+        # TERZAGHI
+        if k == 1:
+
+            if tipo_suelo == "SUELO COHESIVO":
+
+                t1 = r_ter["term1"]
+                t2 = 0
+                t3 = 0
+
+            else:
+
+                t1 = 0
+                t2 = r_ter["term2"]
+                t3 = r_ter["term3"]
+
+            qu = t1 + t2 + t3
+            qadm = qu / FS
+
+            datos_legal.append({
+
+                "Método": "TERZAGHI",
+
+                "1ER": t1,
+                "2DO": t2,
+                "3ERO": t3,
+
+                "qu (kN/m²)": qu,
+                "qadm (kN/m²)": qadm,
+                "Qmáx (kN)": qadm * B0 * L0
+            })
+
+        # EGCC
+        if tipo_suelo == "SUELO COHESIVO":
+
+            t1 = r_gen["term1"]
+            t2 = 0
+            t3 = 0
+
+        else:
+
+            t1 = 0
+            t2 = r_gen["term2"]
+            t3 = r_gen["term3"]
+
+        qu = t1 + t2 + t3
+        qadm = qu / FS
+
+        datos_legal.append({
+
+            "Método": "EGCC",
+
+            "1ER": t1,
+            "2DO": t2,
+            "3ERO": t3,
+
+            "qu (kN/m²)": qu,
+            "qadm (kN/m²)": qadm,
+            "Qmáx (kN)": qadm * B0 * L0
+        })
+
+        # RNE
+        if tipo_suelo == "SUELO COHESIVO":
+
+            t1 = r_rne["term1"]
+            t2 = 0
+            t3 = 0
+
+        else:
+
+            t1 = 0
+            t2 = r_rne["term2"]
+            t3 = r_rne["term3"]
+
+        qu = t1 + t2 + t3
+        qadm = qu / FS
+
+        datos_legal.append({
+
+            "Método": "RNE",
+
+            "1ER": t1,
+            "2DO": t2,
+            "3ERO": t3,
+
+            "qu (kN/m²)": qu,
+            "qadm (kN/m²)": qadm,
+            "Qmáx (kN)": qadm * B0 * L0
+        })
+
+        tabla_legal = pd.DataFrame(datos_legal)
+
+        mostrar_tabla_criterio(
+            tabla_legal,
+            f"CRITERIO RNE IDEALIZADO LEGAL — {tipo_suelo}",
+            "#16a34a"
+        )
+
+       
+       # =====================================
+       # 🔹 CRITERIO RNE CORREGIDO
+       # =====================================
+
+        datos_matematico = []
+
+       # 🔥 Para este eje:
+       # Se asume suelo FRICCIONANTE
+       # → c = 0
+       # → desaparece el 1ER término
+       # → quedan activos 2DO y 3ERO
+
+       # =========================
+       # 🔹 TERZAGHI
+       # =========================
+        if k == 1:
+
+           t1 = 0
+           t2 = r_ter["term2"]
+           t3 = r_ter["term3"]
+
+           qu = t1 + t2 + t3
+           qadm = qu / FS
+
+           datos_matematico.append({
+
+               "Método": "TERZAGHI",
+
+               "1ER": t1,
+               "2DO": t2,
+               "3ERO": t3,
+
+               "qu (kN/m²)": qu,
+               "qadm (kN/m²)": qadm,
+               "Qmáx (kN)": qadm * B0 * L0
+           })
+
+       # =========================
+       # 🔹 EGCC
+       # =========================
+
+        t1 = 0
+        t2 = r_gen["term2"]
+        t3 = r_gen["term3"]
+
+        qu = t1 + t2 + t3
+        qadm = qu / FS
+
+        datos_matematico.append({
+
+           "Método": "EGCC",
+
+           "1ER": t1,
+           "2DO": t2,
+           "3ERO": t3,
+
+           "qu (kN/m²)": qu,
+           "qadm (kN/m²)": qadm,
+           "Qmáx (kN)": qadm * B0 * L0
+       })
+
+       # =========================
+       # 🔹 RNE
+       # =========================
+
+        t1 = 0
+        t2 = r_rne["term2"]
+        t3 = r_rne["term3"]
+
+        qu = t1 + t2 + t3
+        qadm = qu / FS
+
+        datos_matematico.append({
+
+           "Método": "RNE",
+
+           "1ER": t1,
+           "2DO": t2,
+           "3ERO": t3,
+
+           "qu (kN/m²)": qu,
+           "qadm (kN/m²)": qadm,
+           "Qmáx (kN)": qadm * B0 * L0
+       })
+
+        tabla_matematico = pd.DataFrame(datos_matematico)
+
+        mostrar_tabla_criterio(
+           tabla_matematico,
+           "CRITERIO RNE CORREGIDO — SUELO FRICCIONANTE",
+           "#dc2626"
+       )
+    
+         
+    
+    
+    # =====================================
+    # 🔹 MÉTODOS NORMALES
+    # =====================================
+    else:
+
         res = teo["res"]
         
         es_cuadrada = abs(teo["L"] - teo["B"]) < 1e-6
@@ -925,11 +1822,38 @@ with tab2:
         # 🔹 MÉTODO
         # =========================
         if teo["formula"] == "Terzaghi" and es_cuadrada:
+
             metodo_txt = "Método de Terzaghi"
-            formula_txt = r"q_{ult} = 1.3cN_c + qN_q + 0.4\gamma BN_\gamma"
-        else:
+
+            formula_txt = r"""
+q_{ult} = 1.3cN_c + qN_q + 0.4\gamma BN_\gamma
+"""
+
+        elif teo["formula"] == "General":
+
             metodo_txt = "Método General"
-            formula_txt = r"q_{ult} = cN_cF_c + qN_qF_q + 0.5\gamma BN_\gamma F_\gamma"
+
+            formula_txt = r"""
+q_{ult} =
+cN_cF_{cs}F_{cd}F_{ci}
++
+qN_qF_{qs}F_{qd}F_{qi}
++
+0.5\gamma BN_\gamma F_{\gamma s}F_{\gamma d}F_{\gamma i}
+"""
+
+        elif teo["formula"] == "RNE":
+
+            metodo_txt = "Método RNE"
+
+            formula_txt = r"""
+q_{ult} =
+cN_c s_c i_c
++
+qN_q i_q
++
+0.5\gamma BN_\gamma s_\gamma i_\gamma
+"""
 
         st.markdown(f"## 📐 {metodo_txt}")
         st.latex(formula_txt)
@@ -937,7 +1861,10 @@ with tab2:
         # =========================
         # 🔹 DATOS (COMPACTO Y ORDENADO)
         # =========================
-        st.markdown("### 🔹 Datos de entrada")
+        st.markdown(
+    "<h2 style='font-size:22px;'>🔹 Datos de entrada</h2>",
+    unsafe_allow_html=True
+)
         
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("B (m)", f"{teo['B']:.2f}")
@@ -945,17 +1872,32 @@ with tab2:
         c3.metric("L (m)", f"{teo['L']:.2f}")
         c4.metric("φ (°)", f"{res['phi']:.0f}")
         
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("c (t/m²)", f"{res['c']:.2f}")
-        c2.metric("γ (t/m³)", f"{res['gamma']:.2f}")
-        c3.metric("q (t/m²)", f"{res['q']:.2f}")
-        c4.metric("Caso", res['caso'])
+        if metodo_txt == "Método General":
+
+         c1, c2, c3, c4, c5 = st.columns(5)
+
+         c1.metric("c (t/m²)", f"{res['c']:.2f}")
+         c2.metric("γ (t/m³)", f"{res['gamma']:.2f}")
+         c3.metric("q (t/m²)", f"{res['q']:.2f}")
+         c4.metric("β (°)", f"{teo['beta']:.2f}")
+         c5.metric("Caso", res['caso'])
+ 
+        else:
+            
+         c1, c2, c3, c4 = st.columns(4)
+         c1.metric("c (t/m²)", f"{res['c']:.2f}")
+         c2.metric("γ (t/m³)", f"{res['gamma']:.2f}")
+         c3.metric("q (t/m²)", f"{res['q']:.2f}")
+         c4.metric("Caso", res['caso'])
         
         # =========================
         # 🔹 FACTORES
         # =========================
         
-        st.markdown("### 🔹 Factores de capacidad")
+        st.markdown(
+    "<h2 style='font-size:22px;'>🔹 Factores de capacidad</h2>",
+    unsafe_allow_html=True
+)
         
         f1, f2, f3 = st.columns(3)
         f1.metric("Nc", f"{res['Nc']:.2f}")
@@ -966,7 +1908,25 @@ with tab2:
         # 🔹 FACTORES GENERAL (SI APLICA)
         # =========================
         if metodo_txt == "Método General":
-          st.caption(f"Df/B = {res['Df_B']:.2f}")
+
+          st.markdown(
+        "<h2 style='font-size:20px;'>🔧 Factores de corrección</h2>",
+        unsafe_allow_html=True
+    )
+
+          st.markdown(
+    f"""
+    <div style="
+        font-size:22px;
+        font-weight:600;
+        margin-bottom:12px;
+        color:#2d3748;
+    ">
+        Df/B = {res['Df_B']:.2f}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
           
           f1, f2, f3 = st.columns(3)
           f1.metric("Fcs", f"{res['Fcs']:.2f}")
@@ -979,38 +1939,236 @@ with tab2:
           f3.metric("Fqi", f"{res['Fqi']:.2f}")
           
           f1, f2, f3 = st.columns(3)
-          f1.metric("Fgs", f"{res['Fgs']:.2f}")
-          f2.metric("Fgd", f"{res['Fgd']:.2f}")
-          f3.metric("Fgi", f"{res['Fgi']:.2f}")
+          f1.metric("Fγs", f"{res['Fgs']:.2f}")
+          f2.metric("Fγd", f"{res['Fgd']:.2f}")
+          f3.metric("Fγi", f"{res['Fgi']:.2f}")
           
         # =========================
         # 🔹 TÉRMINOS
         # =========================
-        st.markdown("### 🔹 Términos")
+        st.markdown(
+    "<h2 style='font-size:22px;'>🔹 Términos</h2>",
+    unsafe_allow_html=True
+)
         t1, t2, t3 = st.columns(3)
         
         if metodo_txt == "Método de Terzaghi":
             t1.metric("1.3·c·Nc (t/m²)", f"{res['term1']:.2f}")
             t2.metric("q·Nq (t/m²)", f"{res['term2']:.2f}")
             t3.metric("0.4·γ·B·Nγ (t/m²)", f"{res['term3']:.2f}")
-        else:
-            t1.metric("c·Nc·Fc (t/m²)", f"{res['term1']:.2f}")
-            t2.metric("q·Nq·Fq (t/m²)", f"{res['term2']:.2f}")
-            t3.metric("0.5·γ·B·Nγ·Fγ (t/m²)", f"{res['term3']:.2f}")
+            
+        elif metodo_txt == "Método General":
+            
+            t1.metric("c·Nc·Fcs·Fcd·Fci", f"{res['term1']:.2f}")
+            t2.metric("q·Nq·Fqs·Fqd·Fqi", f"{res['term2']:.2f}")
+            t3.metric("0.5·γ·B·Nγ·Fgs·Fgd·Fgi", f"{res['term3']:.2f}")
+        
+        elif metodo_txt == "Método RNE":
+            t1.metric("c·Nc·sc·ic", f"{res['term1']:.2f}")
+            t2.metric("q·Nq·iq", f"{res['term2']:.2f}")
+            t3.metric("0.5·γ·B·Nγ·sg·ig", f"{res['term3']:.2f}")
             
       # =========================
       # 🔹 RESULTADOS
       # =========================
-        st.markdown("### 🔹 Resultados")
+        st.markdown(
+    "<h2 style='font-size:22px;'>🔹 Resultados</h2>",
+    unsafe_allow_html=True
+)
         r1, r2 = st.columns(2)
         r1.success(f"q_ult = {res['qult']:.2f} t/m²")
         r2.success(f"q_adm = {res['qadm']:.2f} t/m²")
 
        # =========================
-       # 🔹 TABLA
+       # 🔹 TABLA DE ITERACIONES
        # =========================
         st.markdown("## 📋 Tabla de iteraciones")
         st.dataframe(st.session_state.df_res, use_container_width=True)
+        
+        
+        # =========================
+        # 🔹 MATRIZ q_ult
+        # =========================
+        df_res = st.session_state.df_res.copy()
+
+        st.markdown("## 📑 Matriz de q_ult")
+
+        tabla_qult = df_res.pivot(
+            index="Df (m)",
+            columns="B (m)",
+            values="q_ult"
+        )
+
+        tabla_qult = (
+            tabla_qult
+            .sort_index()
+            .sort_index(axis=1)
+        )
+
+        # 🔥 REDONDEAR ÍNDICES Y COLUMNAS
+        tabla_qult.index = tabla_qult.index.round(2)
+        tabla_qult.columns = tabla_qult.columns.round(2)
+
+        # 🔥 CAMBIAR NOMBRE VISUAL
+        tabla_qult.index.name = "Df/B"
+
+        st.markdown(
+            """
+            <div style="
+                background:#b91c1c;
+                color:white;
+                padding:8px;
+                border-radius:6px 6px 0 0;
+                font-weight:700;
+                text-align:center;
+                font-size:15px;
+            ">
+                SECCIÓN — q_ult (t/m²)
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.table(
+    tabla_qult.style
+    .format("{:.2f}")
+    .set_properties(**{
+        "text-align": "center",
+        "font-size": "13px"
+    })
+    .set_table_styles([
+        {
+            "selector": "th",
+            "props": [
+                ("background-color", "#dc2626"),
+                ("color", "white"),
+                ("text-align", "center"),
+                ("font-weight", "bold")
+            ]
+        },
+        {
+            "selector": "td",
+            "props": [
+                ("background-color", "#fee2e2"),
+                ("text-align", "center"),
+                ("color", "black")
+            ]
+        }
+    ])
+)
+        
+        
+        
+    
+    
+        # =========================
+        # 🔹 TABLA TIPO EXCEL
+        # =========================
+
+        df_res = st.session_state.df_res.copy()
+
+        # 🔥 REDONDEAR VALORES
+        df_res["B (m)"] = df_res["B (m)"].round(2)
+        df_res["Df (m)"] = df_res["Df (m)"].round(2)
+
+        st.markdown("## 📑 Matriz de resultados")
+
+        # 🔥 CREAR MATRIZ
+        tabla_excel = df_res.pivot(
+            index="Df (m)",
+            columns="B (m)",
+            values="q_adm"
+        )
+
+        # 🔥 REDONDEAR MATRIZ
+        tabla_excel = tabla_excel.round(2)
+
+        # 🔥 ORDENAR
+        tabla_excel = (
+            tabla_excel
+            .sort_index()
+            .sort_index(axis=1)
+        )
+
+        # 🔥 CAMBIAR NOMBRE VISUAL
+        tabla_excel.index.name = "Df/B"
+
+        # =========================
+        # 🔹 TÍTULO DINÁMICO
+        # =========================
+
+        if metodo_txt == "Método de Terzaghi":
+
+            titulo_excel = (
+                "SECCIÓN — qu TERZAGHI "
+                "— Cuadrada (t/m²)"
+            )
+
+        elif metodo_txt == "Método General":
+
+            titulo_excel = (
+                "SECCIÓN — qu MÉTODO GENERAL "
+                "(t/m²)"
+            )
+
+        else:
+
+            titulo_excel = (
+                "SECCIÓN — qu RNE "
+                "(t/m²)"
+            )
+
+        # =========================
+        # 🔹 ENCABEZADO MORADO
+        # =========================
+
+        st.markdown(
+            f"""
+            <div style="
+                background:#6b21a8;
+                color:white;
+                padding:8px;
+                border-radius:6px 6px 0 0;
+                font-weight:700;
+                text-align:center;
+                font-size:15px;
+            ">
+                {titulo_excel}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # =========================
+        # 🔹 MOSTRAR TABLA
+        # =========================
+
+        st.table(
+            tabla_excel.style
+            .format("{:.2f}")
+            .set_properties(**{
+                "text-align": "center",
+                "font-size": "13px"
+            })
+            .set_table_styles([
+                {
+                    "selector": "th",
+                    "props": [
+                        ("background-color", "#8b5cf6"),
+                        ("color", "white"),
+                        ("text-align", "center")
+                    ]
+                },
+                {
+                    "selector": "td",
+                    "props": [
+                        ("background-color", "#f3e8ff"),
+                        ("text-align", "center"),
+                        ("color", "black")
+                    ]
+                }
+            ])
+        )
             
         
 # =========================
@@ -1215,6 +2373,105 @@ with tab3:
         plt.tight_layout()
 
         st.pyplot(fig2, use_container_width=False)
+        
+        # =========================
+        # 🔹 CARGA vs B
+        # =========================
+        st.markdown("### 📊 𝐂𝐚𝐫𝐠𝐚 𝐯𝐬 𝐁")
+
+        tabla_q = df_res.pivot_table(
+            index="B (m)",
+            columns="Df (m)",
+            values="Q (t)"
+        )
+
+        # =========================
+        # 🔹 FIGURA
+        # =========================
+        fig3, ax3 = plt.subplots(figsize=(4,3))
+
+        colores = [
+            "#2b6cb0",
+            "#2f855a",
+            "#b7791f",
+            "#c53030",
+            "#6b46c1"
+        ]
+
+        # =========================
+        # 🔹 CURVAS
+        # =========================
+        for i, df_val in enumerate(tabla_q.columns):
+
+            ax3.plot(
+                tabla_q.index,
+                tabla_q[df_val],
+                marker='o',
+                linewidth=1.8,
+                markersize=4,
+                color=colores[i % len(colores)],
+                label=f"Df={df_val}"
+            )
+
+        # =========================
+        # 🔥 PUNTO MÁXIMO GLOBAL
+        # =========================
+        max_val = tabla_q.max().max()
+
+        idx_max = np.where(tabla_q == max_val)
+
+        fila = idx_max[0][0]
+        col = idx_max[1][0]
+
+        B_opt = tabla_q.index[fila]
+        Df_opt = tabla_q.columns[col]
+
+        ax3.annotate(
+            f"Máx\nB={B_opt:.2f}\nDf={Df_opt:.2f}\nQ={max_val:.1f}",
+            (B_opt, max_val),
+            textcoords="offset points",
+            xytext=(5,5),
+            fontsize=7
+        )
+
+        # =========================
+        # 🔹 FORMATO
+        # =========================
+        ax3.set_xlabel("B (m)", fontsize=9)
+        ax3.set_ylabel("Q (t)", fontsize=9)
+
+        ax3.grid(
+            True,
+            linestyle='--',
+            linewidth=0.5,
+            alpha=0.6
+        )
+
+        ax3.spines['top'].set_visible(False)
+        ax3.spines['right'].set_visible(False)
+
+        ax3.legend(
+            title="Df",
+            fontsize=7,
+            title_fontsize=8,
+            frameon=True,
+            loc='center left',
+            bbox_to_anchor=(1.02, 0.5)
+        )
+
+        ax3.tick_params(
+            axis='both',
+            labelsize=7
+        )
+
+        plt.subplots_adjust(right=0.72)
+
+        plt.tight_layout()
+
+        st.pyplot(
+            fig3,
+            use_container_width=False
+        )
 
     else:
         st.info("⬅️ Presiona 'Calcular capacidad portante'")
