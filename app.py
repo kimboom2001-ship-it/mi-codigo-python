@@ -974,7 +974,7 @@ def capacidad_rne(df, h, Df, B, L, FS, nf, prof_nf, gamma_w, beta, e1=0, e2=0):
     # =========================
     sc = 1 + 0.2 * (B_shape / L_shape)
 
-    sg = 1 - 0.4 * (B_shape / L_shape)
+    sg = 1 - 0.2 * (B_shape / L_shape)
 
     # =========================
     # FACTORES DE INCLINACIÓN
